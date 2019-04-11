@@ -3,7 +3,8 @@ package wechat
 import (
 	"net/http"
 	"sync"
-
+	"github.com/valyala/fasthttp"
+	
 	"github.com/sqeven/wechat/cache"
 	"github.com/sqeven/wechat/context"
 	"github.com/sqeven/wechat/js"
@@ -57,6 +58,14 @@ func copyConfigToContext(cfg *Config, context *context.Context) {
 func (wc *Wechat) GetServer(req *http.Request, writer http.ResponseWriter) *server.Server {
 	wc.Context.Request = req
 	wc.Context.Writer = writer
+	return server.NewServer(wc.Context)
+}
+
+// GetServer 消息管理
+func (wc *Wechat) GetServerWithFastHttp(req *fasthttp.RequestCtx, writer fasthttp.Response) *server.Server {
+	wc.Context.FastHttpCtx = req
+	wc.Context.FastHttpWriter = writer
+	wc.Context.HttType = "fasthttp"
 	return server.NewServer(wc.Context)
 }
 

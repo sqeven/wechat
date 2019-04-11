@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -118,9 +119,18 @@ func (srv *Server) getMessage() (interface{}, error) {
 	var err error
 	if srv.isSafeMode {
 		var encryptedXMLMsg message.EncryptedXMLMsg
-		if err := xml.NewDecoder(srv.Request.Body).Decode(&encryptedXMLMsg); err != nil {
-			return nil, fmt.Errorf("从body中解析xml失败,err=%v", err)
+		if srv.HttType == "fasthttp" {
+			body := srv.FastHttpCtx.PostBody()
+			bodyreader := bytes.NewBuffer(body)
+			if err := xml.NewDecoder(bodyreader).Decode(&encryptedXMLMsg); err != nil {
+				return nil, fmt.Errorf("从body中解析xml失败,err=%v", err)
+			}
+		}else{
+			if err := xml.NewDecoder(srv.Request.Body).Decode(&encryptedXMLMsg); err != nil {
+				return nil, fmt.Errorf("从body中解析xml失败,err=%v", err)
+			}
 		}
+
 
 		//验证消息签名
 		timestamp := srv.Query("timestamp")
@@ -142,14 +152,16 @@ func (srv *Server) getMessage() (interface{}, error) {
 			return nil, fmt.Errorf("消息解密失败, err=%v", err)
 		}
 	} else {
-		rawXMLMsgBytes, err = ioutil.ReadAll(srv.Request.Body)
-		if err != nil {
-			return nil, fmt.Errorf("从body中解析xml失败, err=%v", err)
+		if srv.HttType == "fasthttp" {
+			rawXMLMsgBytes = srv.FastHttpCtx.PostBody()
+		}else{
+			rawXMLMsgBytes, err = ioutil.ReadAll(srv.Request.Body)
+			if err != nil {
+				return nil, fmt.Errorf("从body中解析xml失败, err=%v", err)
+			}	
 		}
 	}
-
 	srv.requestRawXMLMsg = rawXMLMsgBytes
-
 	return srv.parseRequestMessage(rawXMLMsgBytes)
 }
 

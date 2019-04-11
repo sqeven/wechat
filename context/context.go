@@ -1,7 +1,9 @@
 package context
 
 import (
+	"github.com/valyala/fasthttp"
 	"net/http"
+
 	"sync"
 
 	"github.com/sqeven/wechat/cache"
@@ -19,8 +21,15 @@ type Context struct {
 
 	Cache cache.Cache
 
+	HttType string // http/fasthttp
+
+	// 源生http处理
 	Writer  http.ResponseWriter
 	Request *http.Request
+
+	// fasthttp处理
+	FastHttpCtx    *fasthttp.RequestCtx
+	FastHttpWriter fasthttp.Response
 
 	//accessTokenLock 读写锁 同一个AppID一个
 	accessTokenLock *sync.RWMutex
@@ -37,10 +46,21 @@ func (ctx *Context) Query(key string) string {
 
 // GetQuery is like Query(), it returns the keyed url query value
 func (ctx *Context) GetQuery(key string) (string, bool) {
-	req := ctx.Request
-	if values, ok := req.URL.Query()[key]; ok && len(values) > 0 {
-		return values[0], true
+	if "fasthttp" == ctx.HttType {
+		//if values, ok := req.URL.Query()[key]; ok && len(values) > 0 {
+		//	return values[0], true
+		//}
+		val := string(ctx.FastHttpCtx.QueryArgs().Peek(key))
+		if len(val) > 0 {
+			return val, true
+		}
+	} else {
+		req := ctx.Request
+		if values, ok := req.URL.Query()[key]; ok && len(values) > 0 {
+			return values[0], true
+		}
 	}
+
 	return "", false
 }
 

@@ -3,6 +3,7 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/valyala/fasthttp"
 	"net/http"
 	"net/url"
 
@@ -46,6 +47,17 @@ func (oauth *Oauth) Redirect(writer http.ResponseWriter, req *http.Request, redi
 	http.Redirect(writer, req, location, 302)
 	return nil
 }
+
+//Redirect 跳转到网页授权, 如果是fasthttp
+func (oauth *Oauth) RedirectFastHttp(ctx *fasthttp.RequestCtx, redirectURI, scope, state string) error {
+	location, err := oauth.GetRedirectURL(redirectURI, scope, state)
+	if err != nil {
+		return err
+	}
+	ctx.Redirect(location,302)
+	return nil
+}
+
 
 // ResAccessToken 获取用户授权access_token的返回结果
 type ResAccessToken struct {
