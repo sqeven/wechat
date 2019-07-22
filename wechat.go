@@ -3,15 +3,16 @@ package wechat
 import (
 	"net/http"
 	"sync"
-	"github.com/valyala/fasthttp"
-	
+
 	"github.com/sqeven/wechat/cache"
 	"github.com/sqeven/wechat/context"
 	"github.com/sqeven/wechat/js"
 	"github.com/sqeven/wechat/material"
 	"github.com/sqeven/wechat/menu"
+	"github.com/sqeven/wechat/miniprogram"
 	"github.com/sqeven/wechat/oauth"
 	"github.com/sqeven/wechat/pay"
+	"github.com/sqeven/wechat/qr"
 	"github.com/sqeven/wechat/server"
 	"github.com/sqeven/wechat/template"
 	"github.com/sqeven/wechat/user"
@@ -61,14 +62,6 @@ func (wc *Wechat) GetServer(req *http.Request, writer http.ResponseWriter) *serv
 	return server.NewServer(wc.Context)
 }
 
-// GetServer 消息管理
-func (wc *Wechat) GetServerWithFastHttp(req *fasthttp.RequestCtx, writer fasthttp.Response) *server.Server {
-	wc.Context.FastHttpCtx = req
-	wc.Context.FastHttpWriter = writer
-	wc.Context.HttType = "fasthttp"
-	return server.NewServer(wc.Context)
-}
-
 //GetAccessToken 获取access_token
 func (wc *Wechat) GetAccessToken() (string, error) {
 	return wc.Context.GetAccessToken()
@@ -107,4 +100,14 @@ func (wc *Wechat) GetTemplate() *template.Template {
 // GetPay 返回支付消息的实例
 func (wc *Wechat) GetPay() *pay.Pay {
 	return pay.NewPay(wc.Context)
+}
+
+// GetQR 返回二维码的实例
+func (wc *Wechat) GetQR() *qr.QR {
+	return qr.NewQR(wc.Context)
+}
+
+// GetMiniProgram 获取小程序的实例
+func (wc *Wechat) GetMiniProgram() *miniprogram.MiniProgram {
+	return miniprogram.NewMiniProgram(wc.Context)
 }
