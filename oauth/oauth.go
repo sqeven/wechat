@@ -3,6 +3,7 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/valyala/fasthttp"
 	"net/http"
 	"net/url"
 
@@ -42,6 +43,16 @@ func (oauth *Oauth) GetRedirectURL(redirectURI, scope, state string) (string, er
 func (oauth *Oauth) GetWebAppRedirectURL(redirectURI, scope, state string) (string, error) {
 	urlStr := url.QueryEscape(redirectURI)
 	return fmt.Sprintf(webAppRedirectOauthURL, oauth.AppID, urlStr, scope, state), nil
+}
+
+//Redirect 跳转到网页授权, 如果是fasthttp
+func (oauth *Oauth) RedirectFastHttp(ctx *fasthttp.RequestCtx, redirectURI, scope, state string) error {
+	location, err := oauth.GetRedirectURL(redirectURI, scope, state)
+	if err != nil {
+		return err
+	}
+	ctx.Redirect(location,302)
+	return nil
 }
 
 //Redirect 跳转到网页授权
