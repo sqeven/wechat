@@ -1,8 +1,11 @@
 package context
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/ddliu/go-httpclient"
 	"sync"
 	"time"
 
@@ -37,7 +40,7 @@ func (ctx *Context) SetGetAccessTokenFunc(f GetAccessTokenFunc) {
 
 //GetAccessToken 获取access_token
 func (ctx *Context) GetAccessToken() (accessToken string, err error) {
-	ctx.accessTokenLock.Lock()
+	/*ctx.accessTokenLock.Lock()
 	defer ctx.accessTokenLock.Unlock()
 
 	if ctx.accessTokenFunc != nil {
@@ -60,7 +63,35 @@ func (ctx *Context) GetAccessToken() (accessToken string, err error) {
 	}
 
 	accessToken = resAccessToken.AccessToken
-	return
+	return*/
+	// 中心TOKEN
+	if ctx.TokenUrl == "" {
+		return "", errors.New("无效地址")
+	}
+	tokenRes, err := httpclient.Get(ctx.TokenUrl, map[string]string{
+		"appid": ctx.AppID,
+	})
+
+	if err != nil {
+		return "", err
+	} else {
+		bodyString, _ := tokenRes.ToString()
+		type gatapirsp struct {
+			Code int    `json:"code"`
+			Msg  string `json:"msg"`
+			Data string `json:"data"`
+		}
+		var rsp gatapirsp
+		bodybyte := bytes.TrimPrefix([]byte(bodyString), []byte("\xef\xbb\xbf"))
+		if err := json.Unmarshal(bodybyte, &rsp); err != nil {
+			return "", err
+		}
+		if rsp.Code != 0 {
+			return "", errors.New(rsp.Msg)
+		} else {
+			return rsp.Data, nil
+		}
+	}
 }
 
 //GetAccessTokenFromServer 强制从微信服务器获取token
@@ -84,7 +115,7 @@ func (ctx *Context) GetAccessTokenFromServer() (resAccessToken ResAccessToken, e
 	expires := resAccessToken.ExpiresIn - 1500
 	if ctx.Cache != nil {
 		err = ctx.Cache.Set(accessTokenCacheKey, resAccessToken.AccessToken, time.Duration(expires)*time.Second)
-		return 
+		return
 	}
 	return
 }

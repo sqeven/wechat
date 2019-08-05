@@ -29,6 +29,7 @@ type Config struct {
 	AppID          string
 	AppSecret      string
 	Token          string
+	TokenUrl       string
 	EncodingAESKey string
 	PayMchID       string //支付 - 商户 ID
 	PayNotifyURL   string //支付 - 接受微信支付结果通知的接口地址
@@ -47,6 +48,7 @@ func copyConfigToContext(cfg *Config, context *context.Context) {
 	context.AppID = cfg.AppID
 	context.AppSecret = cfg.AppSecret
 	context.Token = cfg.Token
+	context.TokenUrl = cfg.TokenUrl
 	context.EncodingAESKey = cfg.EncodingAESKey
 	context.PayMchID = cfg.PayMchID
 	context.PayKey = cfg.PayKey

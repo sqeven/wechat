@@ -17,8 +17,8 @@ type Context struct {
 	PayMchID       string
 	PayNotifyURL   string
 	PayKey         string
-
-	Cache cache.Cache
+	TokenUrl       string
+	Cache          cache.Cache
 
 	HttType string // http/fasthttp
 
